@@ -1,0 +1,9 @@
+{
+  "name": "pendo-nps-to-sfdc",
+  "version": "0.1.0",
+  "description": "Sync Pendo NPS responses into Salesforce",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js"
+  }
+}
