@@ -1,7 +1,8 @@
 # Pendo NPS to Salesforce Sync
 
 This repo contains a small Node.js script that pulls NPS responses from Pendo
-and upserts them into a Salesforce table (custom object).
+and upserts them into a Salesforce table (custom object). The default mapping
+captures response date, tenant ID, user ID, score/rating, and comments.
 
 ## Requirements
 
@@ -68,7 +69,8 @@ environment are not overridden.
 - `SFDC_OBJECT` (optional, default: `NPS_Response__c`).
 - `SFDC_EXTERNAL_ID_FIELD` (optional, default: `Pendo_Response_Id__c`).
 - `SFDC_FIELD_MAP` (required in practice): JSON mapping of Salesforce field
-  names to Pendo response paths.
+  names to Pendo response paths. Values can be a string or an array of strings,
+  and the first resolved path is used.
 - `SFDC_STATIC_FIELDS` (optional): JSON object of fixed fields to set on every
   record (for example `{"Source__c":"Pendo"}`).
 - `SFDC_CONCURRENCY` (optional, default: `5`): Upsert concurrency.
@@ -78,11 +80,11 @@ environment are not overridden.
 ```json
 {
   "Pendo_Response_Id__c": "id",
-  "Score__c": "score",
-  "Comment__c": "comment",
-  "Response_At__c": "createdAt",
-  "Visitor_Id__c": "visitor.id",
-  "Account_Id__c": "visitor.accountId"
+  "Response_Date__c": ["createdAt", "createdAtISO"],
+  "Tenant_ID__c": ["visitor.accountId", "accountId"],
+  "User_ID__c": ["visitor.id", "visitorId"],
+  "Score__c": ["score", "rating"],
+  "Comments__c": ["comment", "comments"]
 }
 ```
 

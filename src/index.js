@@ -89,6 +89,31 @@ function getByPath(value, pathExpression) {
   }, value);
 }
 
+function resolvePathValue(value, pathExpression) {
+  if (!pathExpression) {
+    return undefined;
+  }
+
+  if (Array.isArray(pathExpression)) {
+    for (const candidate of pathExpression) {
+      if (!candidate) {
+        continue;
+      }
+      const resolved = getByPath(value, candidate);
+      if (resolved !== undefined) {
+        return resolved;
+      }
+    }
+    return undefined;
+  }
+
+  if (typeof pathExpression === "string") {
+    return getByPath(value, pathExpression);
+  }
+
+  return undefined;
+}
+
 function normalizePendoResponses(payload, resultsPath) {
   if (!payload) {
     return [];
@@ -140,11 +165,16 @@ function buildConfig() {
 
   const defaultFieldMap = {
     [sfdcExternalIdField]: pendoExternalIdPath,
-    Score__c: "score",
-    Comment__c: "comment",
-    Response_At__c: "createdAt",
-    Visitor_Id__c: "visitor.id",
-    Account_Id__c: "visitor.accountId",
+    Response_Date__c: ["createdAt", "createdAtISO", "created_at"],
+    Tenant_ID__c: [
+      "visitor.accountId",
+      "accountId",
+      "account.id",
+      "metadata.accountId",
+    ],
+    User_ID__c: ["visitor.id", "visitorId", "userId", "user.id"],
+    Score__c: ["score", "rating"],
+    Comments__c: ["comment", "comments", "feedback"],
   };
 
   const sfdcFieldMap = parseJsonEnv("SFDC_FIELD_MAP", defaultFieldMap);
@@ -244,7 +274,7 @@ function buildSalesforceRecord(response, config) {
   for (const [field, pathExpression] of Object.entries(
     config.sfdcFieldMap
   )) {
-    const value = getByPath(response, pathExpression);
+    const value = resolvePathValue(response, pathExpression);
     if (value !== undefined) {
       record[field] = value;
     }
